@@ -24,11 +24,9 @@ pandocCompiler' =
       }
 
 main :: IO ()
-main = hakyllWith config $ do
-    create ["css/syntax.css"] $ do
-        route idRoute
-        compile $ do
-            makeItem $ styleToCss pandocCodeStyle
+main = 
+    
+    hakyllWith config $ do
     
     match "images/*" $ do
         route   idRoute
@@ -37,6 +35,11 @@ main = hakyllWith config $ do
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
+
+    create ["css/syntax.css"] $ do
+        route idRoute
+        compile $ do
+            makeItem $ styleToCss pandocCodeStyle
 
     match (fromList ["about.rst", "contact.markdown"]) $ do
         route   $ setExtension "html"
