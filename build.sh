@@ -1,4 +1,4 @@
-rm -r ./docs
-rm -r ./_site
-site rebuild
-cp -r ./_site ./docs
+cabal clean
+cabal build
+cabal exec site -- clean
+cabal exec site -- build

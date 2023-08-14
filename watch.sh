@@ -1,2 +1,2 @@
 ./build.sh
-site watch
+cabal exec site -- watch

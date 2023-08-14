@@ -1,9 +1,10 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Data.Monoid (mappend)
+import           Data.Monoid              (mappend)
 import           Hakyll
-import Text.Pandoc.Highlighting (Style, breezeDark, styleToCss)
-import Text.Pandoc.Options      (ReaderOptions (..), WriterOptions (..))
+import           Text.Pandoc.Highlighting (Style, pygments, styleToCss)
+import           Text.Pandoc.Options      (ReaderOptions (..),
+                                           WriterOptions (..))
 
 --------------------------------------------------------------------------------
 
@@ -13,21 +14,21 @@ config = defaultConfiguration
   }
 
 pandocCodeStyle :: Style
-pandocCodeStyle = breezeDark
+pandocCodeStyle = pygments
 
 pandocCompiler' :: Compiler (Item String)
 pandocCompiler' =
   pandocCompilerWith
     defaultHakyllReaderOptions
     defaultHakyllWriterOptions
-      { writerHighlightStyle   = Just pandocCodeStyle
+      { writerHighlightStyle = Just pandocCodeStyle
       }
 
 main :: IO ()
-main = 
-    
+main =
+
     hakyllWith config $ do
-    
+
     match "images/*" $ do
         route   idRoute
         compile copyFileCompiler
