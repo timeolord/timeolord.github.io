@@ -1,3 +1,4 @@
 rm -r ./docs
-site build
+rm -r ./_site
+site rebuild
 cp -r ./_site ./docs
