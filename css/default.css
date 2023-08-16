@@ -129,7 +129,7 @@ main h5,
 main ol,
 main ul,
 main blockquote {
-  width: 600px;
+  width: 90%;
   margin: auto;
   line-height: 1.75em;
 }
