@@ -9,6 +9,8 @@
         <link rel="stylesheet" href="../css/syntax.css" />
     </head>
     <body>
+        <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript">
+        </script>
         <header>
             <div class="logo">
                 <img src="../images/wei-logo.svg" style="width:50%; max-width:80px; display: block; margin-left: auto; margin-right: auto;" />
@@ -24,14 +26,16 @@
 
         <main role="main">
             <h1>2048 Using Comonads (The Ascended Way?)</h1>
-            <article>
+            
+<article>
     <section class="header">
         <p>Posted on August 17, 2023</p><br>
         
     </section>
     <section>
-        <p>In this post, I’ll explain what comonads are, how they relate to monads, and how they can be used to model the game logic of 2048. I will also show you some code snippets that demonstrate the comonadic approach to 2048. Lastly I’ll go over why you might choose to use comonads over other approaches, and what the pros and cons of each are.</p>
-<h1 id="what-is-a-comonad-anyways">What is a Comonad anyways?</h1>
+        <p>In this post, I’ll explain what comonads are, how they relate to monads, and how they can be used to model the game logic of 2048. I will also present a simple program that demonstrate the comonadic approach to 2048, and go through the implementation step by step. Lastly I’ll go over why you might choose to use comonads over other approaches, and what the pros and cons of each are.</p>
+<p>I’ll give a brief overview of the mechanics of 2048 for those who are unfamiliar. 2048 is a game where you slide tiles around a 4x4 grid. Each tile has a value, and when two tiles with the same value collide they merge into a single tile with the sum of their values. The goal of the game is to get a tile with the value of 2048. The game ends when the grid is full and there are no more moves to make. If you’ve never played it try it out <a href="https://play2048.co/">here</a>, just beware it can be very addictive.</p>
+<h2 id="what-is-a-comonad-anyways">What is a Comonad anyways?</h2>
 <p>Comonads are a concept from category theory, which is a branch of mathematics that studies abstract structures and their relationships. Category theory is also a useful tool for reasoning about programming, as it provides a common language to describe different types of computations and their properties.</p>
 <p>If you’ve used Haskell for some amount of time you might have heard of monads. Monads are a way of composing functions that produce some extra effects or context, such as IO, state, or randomness. Monads can be seen as a generalization of the idea of chaining computations with the bind operator (<code>&gt;&gt;=</code>) in Haskell.</p>
 <p>Comonads are the dual of monads, which means that they reverse the direction of the arrows and swap the roles of the components. Comonads are a way of composing functions that consume some extra context or environment, such as streams, arrays, or trees. Comonads can be seen as a generalization of the idea of applying functions with the extend (<code>&lt;&lt;=</code>) operator in Haskell.</p>
@@ -46,7 +50,7 @@ These three components have to satisfy some laws that ensure that they behave we
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>extend extract <span class="ot">=</span> <span class="fu">id</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>extend f <span class="op">.</span> extend g <span class="ot">=</span> extend (f <span class="op">.</span> extend g)</span></code></pre></div>
 <p>These laws are analogous to the monad laws, but with the arrows reversed.</p>
-<h1 id="how-do-comonads-relate-to-monads">How do comonads relate to monads?</h1>
+<h2 id="how-do-comonads-relate-to-monads">How do comonads relate to monads?</h2>
 <p>Monads and comonads are both special cases of adjunctions, which are pairs of functors that have a natural correspondence between them. An adjunction consists of two functors <code>f :: C -&gt; D</code> and <code>g :: D -&gt; C</code>, and two natural transformations <code>unit :: id -&gt; g . f</code> and <code>counit :: f . g -&gt; id</code>, such that:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fmap</span> counit <span class="op">.</span> unit <span class="ot">=</span> <span class="fu">id</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>counit <span class="op">.</span> <span class="fu">fmap</span> unit <span class="ot">=</span> <span class="fu">id</span></span></code></pre></div>
@@ -54,10 +58,10 @@ These three components have to satisfy some laws that ensure that they behave we
 <div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span> <span class="ot">=</span> unit</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(<span class="op">&gt;&gt;=</span>) <span class="ot">=</span> <span class="fu">fmap</span> counit <span class="op">.</span> <span class="fu">flip</span> (<span class="op">.</span>) unit</span></code></pre></div>
 <p>Similarly, an adjunction gives rise to a comonad on <code>D</code> by composing <code>f . g :: D -&gt; D</code>, and defining:</p>
-<pre><code>extract = counit
-extend = fmap unit . flip (.) counit</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>extract <span class="ot">=</span> counit</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>extend <span class="ot">=</span> <span class="fu">fmap</span> unit <span class="op">.</span> <span class="fu">flip</span> (<span class="op">.</span>) counit</span></code></pre></div>
 <p>In fact, every monad arises from an adjunction in this way, and every comonad arises from an adjunction in the opposite way.</p>
-<h1 id="comonads-in-haskell">Comonads In Haskell</h1>
+<h2 id="comonads-in-haskell">Comonads In Haskell</h2>
 <p>Now lets try to make the comonad in Haskell! Let’s construct a Comonad by reversing the arrows of the Monad! Here we can see our Monad class that we’re familiar with:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Functor</span> m <span class="ot">=&gt;</span> <span class="dt">Monad</span> m <span class="kw">where</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  return ::</span> a <span class="ot">-&gt;</span> m a</span>
@@ -80,7 +84,7 @@ extend = fmap unit . flip (.) counit</code></pre>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  extract (<span class="dt">Stream</span> a _) <span class="ot">=</span> a</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  extend f s<span class="op">@</span>(<span class="dt">Stream</span> _ t) <span class="ot">=</span> <span class="dt">Stream</span> (f s) (extend f t)</span></code></pre></div>
 <p>Lets use this stream to get a better understanding of how a comonad works. The <code>extract</code> function is pretty simple, it just returns the value of the current element much like <code>head</code> for a list. The <code>extend</code> function is a bit more complicated. It takes a function <code>f :: Stream a -&gt; b</code> and a stream <code>s :: Stream a</code>, and returns a new stream <code>Stream b</code>. The first element of the new stream is the result of applying <code>f</code> to the original stream <code>s</code>. The rest of the elements are the result of applying <code>f</code> to the tail of the original stream <code>t</code>. This means that <code>extend</code> is a way of applying a function to a stream, and getting back a new stream of the results. This is similar to how <code>map</code> is a way of applying a function to a list, and getting back a new list of the results.</p>
-<h1 id="using-comonads-to-model-2048">Using Comonads to Model 2048</h1>
+<h2 id="using-comonads-to-model-2048">Using Comonads to Model 2048</h2>
 <p>Now that we have a basic understanding of what a comonad is, lets use it to model the game logic of 2048. There are many approaches to modeling the grid of tiles in 2048, commonly used is a 2d array, but maps are also a good choice. In the same way that the <code>Stream</code> comonad is similar to the list, the <code>Store</code> comonad is similar to the <code>Map</code> data structure. Here’s what it looks like:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Store</span> s a <span class="ot">=</span> <span class="dt">Store</span> (s <span class="ot">-&gt;</span> a) s</span></code></pre></div>
 <p>The <code>Store</code> comonad contains a function from a key <code>s</code> to a value <code>a</code>, and a key <code>s</code>. We can make this a comonad by defining <code>extract</code> and <code>duplicate</code>:</p>
@@ -205,9 +209,9 @@ extend = fmap unit . flip (.) counit</code></pre>
 <span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;d&quot;</span> <span class="ot">-&gt;</span> mainLoop (addNewTile <span class="op">$</span> extend (gameRule <span class="dt">D</span> <span class="op">.</span> tab (Memo.pair Memo.integral Memo.integral)) g)</span>
 <span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>      _   <span class="ot">-&gt;</span> mainLoop g</span></code></pre></div>
 <p>Now that the memoization is in place, you can play 2048 to your hearts content! You can find the full source code and GitHub project <a href="https://github.com/timeolord/Comonadic-2048">here</a>.</p>
-<h1 id="why-use-comonads">Why use Comonads?</h1>
-<p>Now that we have a working implementation of 2048 using comonads, let’s talk about why you might want to use comonads over other approaches. The main advantage for the our implementation is the elegance of the solution. The comonadic approach is very declarative and the main game logic can be expressed in just a few lines of code. Additionally adding new game mechanics is very easy, since you can trivially compose functions of the form <code>Comonad w =&gt; w a -&gt; b</code>. Other advantages that we didn’t see in our example is that comonads can be used to model many other things, such as streams, zippers, lenses, and cellular automata, and by writing code that is generic over comonads you can reuse it for all of these different things. And most importantly there is the flex of being able to say that you used comonads, and with that you can take one more step towards Haskell enlightenment.</p>
-<p>However, it’s not all sunshine and rainbows. The path to enlightenment is a lonely one. Most programmers don’t know what a comonad is, and even fewer know how to use them. This means that if you use comonads in your code, you will have to explain what they are and how they work to your peers. That also means if you need help chances are you’ll have to figure it out yourself. Compare that to the number of monad tutorials. Since comonads are niche, most libraries and tools don’t have support for them. So chances are you’ll have to write a lot of boilerplate code just to get things working. Lastly, as we saw with our implementation, comonads can be prohibitively slow if implemented naively, which adds another yet another layer of complexity.</p>
+<h2 id="why-use-comonads">Why use Comonads?</h2>
+<p>Now that we have a working implementation of 2048 using comonads, let’s talk about why you might want to use comonads over other approaches. The main advantage for the our implementation is the elegance of the solution. The comonadic approach is very declarative and the main game logic can be expressed in just a few lines of code. Compared working directly with a 2d list, like in this <a href="https://github.com/gregorulm/h2048/blob/master/h2048.hs">implementation</a> (no shade to the author by the way), the vast majority of the code is focused on implementing game logic, whereas our game logic is implemented in only a few functions, and half of the code is simply boilerplate for the comonad. If we used a library that implements a comonad for us, our game would be less than 50 lines of code. There’s also the personal but still important style of the code, using comonads we can write declarative code. Additionally adding new game mechanics is very easy, since you can trivially compose functions of the form <code>Comonad w =&gt; w a -&gt; b</code>. Other advantages that we didn’t see in our example is that comonads can be used to model many other things, such as streams, zippers, lenses, and cellular automata, and by writing code that is generic over comonads you can reuse it for all of these different things, so that allows for us to experiment with different data structures easily and compare performance. Lastly and most importantly there is the flex of being able to say that you used comonads, and with that you can take one more step towards Haskell enlightenment.</p>
+<p>However, it’s not all sunshine and rainbows. The path to enlightenment is a lonely one. Most programmers don’t know what a comonad is, and even fewer know how to use them. This means that if you use comonads in your code, you will have to explain what they are and how they work to your peers. That also means if you need help chances are you’ll have to figure it out yourself. Compare that to the number of monad tutorials. Since comonads are a niche, most libraries and tools don’t have support for them. So chances are you’ll have to write a lot of boilerplate code just to get things working. Lastly, as we saw with our implementation, comonads can be prohibitively slow if implemented naively, which adds another yet another layer of complexity.</p>
 <p>Ultimately these trade offs are up to you to decide. But it’s always better to have something and not need it. So I encourage you to try using comonads in your next project, and see if they work for you.</p>
     </section>
 </article>

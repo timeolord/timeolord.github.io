@@ -1,3 +1,3 @@
 ---
-title: Coroutines with Continuations
+title: Coroutines in Haskell with Continuations 
 ---

@@ -4,6 +4,11 @@
         "Comonad",
         "comonadic",
         "Comonads",
-        "fmap"
+        "debuggable",
+        "endofunctor",
+        "fmap",
+        "moddable",
+        "morphism",
+        "morphisms"
     ]
 }
