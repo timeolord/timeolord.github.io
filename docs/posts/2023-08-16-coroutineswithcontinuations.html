@@ -25,7 +25,7 @@
         </header>
 
         <main role="main">
-            <h1>Coroutines in Haskell with Continuations</h1>
+            <h1>Coroutines in Haskell with Monadic Continuations</h1>
             
 <article>
     <section class="header">
@@ -33,7 +33,63 @@
         
     </section>
     <section>
-        
+        <p>Coroutines are a powerful feature that can help you create responsive games. Coroutines are functions that can pause and resume their execution at any point, without blocking the main thread of the game. This allows you to perform tasks that require waiting, delays, or multiple steps, without affecting the responsiveness of your game. There are a perfect abstraction for modeling events over time, such as animations, physics, and AI.</p>
+<p>For example, imagine you want to create a simple animation where a character moves from one point to another, while changing its color and size. You could write a coroutine that updates the character’s position, color, and size every frame, and pauses until the next frame using the yield statement, without worrying about an explicit time parameter.</p>
+<p>Coroutines are a common feature in many programming languages, such as Lua, Python, and C#. However, they are not a native feature of Haskell. In this article, we will explore how to implement coroutines in Haskell using continuations and monads. We will also see how to use coroutines to create a simple game.</p>
+<h2 id="what-is-a-continuation">What is a continuation?</h2>
+<p>A continuation is a way of representing the state of a computation at any point in time. Like a snapshot of what the program is doing and what it needs to do next. A continuation can be used to resume the computation from where it left off, or to transfer the control to a different part of the program. A continuation can also be passed as an argument to another function, which can then decide how to continue the computation. This is called continuation-passing style, and it is a common technique in functional programming languages.</p>
+<p>One way to understand continuations is to imagine that every function has an extra parameter that represents what the function should do after it finishes its work. This parameter is called the continuation, and it is usually a function that takes the result of the original function as its input. For example, suppose we have a function</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">id</span><span class="ot"> ::</span> a <span class="ot">-&gt;</span> a</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">id</span> x <span class="ot">=</span> x</span></code></pre></div>
+<p>We can rewrite it in continuation-passing style as</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">idCps ::</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> r) <span class="ot">-&gt;</span> r</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>idCps x k <span class="ot">=</span> k x</span></code></pre></div>
+<p>where <code>k</code> is the continuation. The function <code>id_cps</code> calls <code>k</code> with <code>x</code>. Since continuations allow you to transfer the control to a different part of the program, we can use them to implement control flow constructs such as <code>if</code>. For example, we can implement <code>if</code> as</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ifCps ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> r) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> r) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> r</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ifCps <span class="dt">True</span> t f a <span class="ot">=</span> t a</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>ifCps <span class="dt">False</span> t f a <span class="ot">=</span> f a</span></code></pre></div>
+<p>where <code>t</code> is the continuation that will be called if the condition is true, and <code>f</code> is the continuation that will be called if the condition is false. We can use <code>ifCps</code> to implement a function that returns the absolute value of a number:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">absCps ::</span> (<span class="dt">Num</span> r, <span class="dt">Ord</span> a, <span class="dt">Num</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> r) <span class="ot">-&gt;</span> r</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>absCps x k <span class="ot">=</span> ifCps (x <span class="op">&gt;=</span> <span class="dv">0</span>) k (\x <span class="ot">-&gt;</span> k (<span class="op">-</span>x)) x</span></code></pre></div>
+<p>which we can use as</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> absCps (<span class="op">-</span><span class="dv">5</span>) <span class="fu">id</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dv">5</span></span></code></pre></div>
+<h2 id="monadic-continuations">Monadic continuations</h2>
+<p>Continuations are a powerful abstraction, but they are not very convenient to use. Continuations are functions that take a single argument, and return a value. This means that if we want to use continuations to implement a coroutine, we would have to pass the coroutine’s state as an argument to the continuation, and return the coroutine’s state as the result of the continuation. This is not very convenient, because it means that we would have to explicitly pass the coroutine’s state as an argument to every function that uses the coroutine.</p>
+<p>Instead we can use the monad abstraction to simplify this process.</p>
+<h2 id="what-is-monad">What is Monad?</h2>
+<p>A monad is a concept from category theory. A category is a collection of objects and arrows, called morphisms, between them, that satisfy some basic rules. For example, the category of sets has sets as objects and functions as arrows.</p>
+<p>A functor is a way of mapping one category to another, preserving the structure of the objects and arrows. For example, the power set functor maps any set to its power set (the set of all subsets), and any function to the function that takes the image of each subset.</p>
+<p>An endofunctor is a functor that maps a category to itself. For example, the power set functor is an endofunctor on the category of sets.</p>
+<p>A monad is a special kind of endofunctor, that comes with two additional operations: unit and join. The unit operation takes any object in the category and returns an object in the image of the endofunctor. The join operation takes any object in the image of the endofunctor applied twice, and returns an object in the image of the endofunctor applied once. These operations have to satisfy some coherence conditions, similar to the ones for monoids (which are structures with a binary operation and an identity element).</p>
+<p>One way to think about a monad is that it adds some extra layer of structure or context to the objects and arrows in the category. For example, the power set monad adds the structure of subsets and inclusion relations. The unit operation wraps an object into a singleton subset, and the join operation flattens a set of subsets into a single subset.</p>
+<p>This abstraction is a perfect abstraction for our coroutines, since the continuation is the context that we must pass around to every function that uses the coroutine.</p>
+<h2 id="monadic-continuations-1">Monadic continuations</h2>
+<p>We can use the monad abstraction to simplify the implementation of coroutines. We can define a monad that represents a continuation as</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">Cont</span> r a <span class="ot">=</span> <span class="dt">Cont</span> {<span class="ot"> runCont ::</span> (a <span class="ot">-&gt;</span> r) <span class="ot">-&gt;</span> r }</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">Cont</span> r) <span class="kw">where</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmap</span> f m <span class="ot">=</span> <span class="dt">Cont</span> <span class="op">$</span> \c <span class="ot">-&gt;</span> runCont m (c <span class="op">.</span> f)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Applicative</span> (<span class="dt">Cont</span> r) <span class="kw">where</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pure</span> a <span class="ot">=</span> <span class="dt">Cont</span> (<span class="op">$</span> a)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    (<span class="op">&lt;*&gt;</span>) <span class="ot">=</span> ap</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">Cont</span> r) <span class="kw">where</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    m <span class="op">&gt;&gt;=</span> k  <span class="ot">=</span> <span class="dt">Cont</span> <span class="op">$</span> \c <span class="ot">-&gt;</span> runCont m <span class="op">$</span> \a <span class="ot">-&gt;</span> runCont (k a) c</span></code></pre></div>
+<p>where <code>r</code> is the type of the result, and <code>a</code> is the type of the value. The <code>runCont</code> function takes a continuation as an argument, and returns the result of the continuation. We can use this monad to implement our previous functions <code>idCps</code>, <code>ifCps</code>, and <code>absCps</code> as</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">idCps ::</span> a <span class="ot">-&gt;</span> <span class="dt">Cont</span> r a</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>idCps x <span class="ot">=</span> <span class="dt">Cont</span> <span class="op">$</span> \k <span class="ot">-&gt;</span> k x</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ot">ifCps ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Cont</span> r a <span class="ot">-&gt;</span> <span class="dt">Cont</span> r a <span class="ot">-&gt;</span> <span class="dt">Cont</span> r a</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ifCps <span class="dt">True</span> t f <span class="ot">=</span> t</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>ifCps <span class="dt">False</span> t f <span class="ot">=</span> f</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ot">absCps ::</span> (<span class="dt">Num</span> r, <span class="dt">Ord</span> a, <span class="dt">Num</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Cont</span> r a</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>absCps x <span class="ot">=</span> ifCps (x <span class="op">&gt;=</span> <span class="dv">0</span>) (idCps x) (idCps (<span class="op">-</span>x))</span></code></pre></div>
+<p>which gives us the same results as before:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> runCont (absCps (<span class="op">-</span><span class="dv">5</span>)) <span class="fu">id</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dv">5</span></span></code></pre></div>
     </section>
 </article>
         </main>

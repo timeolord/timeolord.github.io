@@ -138,3 +138,130 @@ Now we get the following result:
 So hopefully that gave you a good idea of what a free monad is and how it works. Now let's see how we can use it to implement a scripting language for our game.
 
 ## Free monads for game scripting
+
+Say you're making an RPG for example, and you want to allows status effects to be added, removed and composed within the scripting language. This way the game designers and modders can add new status effects based on the primitives that you provide. So let's define a data type for our scripting language:
+
+```haskell
+data ScriptExpr t a
+  = AddEffect TargetName EffectName a
+  | RemoveEffect TargetName EffectName a
+  | NewEffect EffectName a
+  deriving Functor
+
+type EffectName = String
+type TargetName = String
+
+type FreeScript t = Free (ScriptExpr t)
+```
+
+We are using type synonyms to easily change our types later, since `String` is not a great representation, but let's roll with it for now. Now we can define some helper functions to lift our constructors into the free monad:
+
+```haskell
+addEffect :: TargetName -> EffectName -> FreeScript t ()
+addEffect target effect = liftF $ AddEffect target effect ()
+
+removeEffect :: TargetName -> EffectName -> FreeScript t ()
+removeEffect target effect = liftF $ RemoveEffect target effect ()
+
+newEffect :: EffectName  -> FreeScript t a -> FreeScript t a
+newEffect effect script = Free $ NewEffect effect script
+```
+
+For `newEffect` we can't use `liftF` so we have to use `Free` directly. So let me explain what our scripting language is meant to do. AddEffect and RemoveEffect will add add or remove an effect from a target. NewEffect will create a new effect, and then run the script that is passed to it. This way we can compose effects together. Now let's write two simple scripts to demonstrate:
+
+```haskell
+applyBurn :: FreeScript t ()
+applyBurn = do
+    addEffect "player" "burn"
+    removeEffect "player" "wet"
+
+poisonBurnEffect :: FreeScript t ()
+poisonBurnEffect = do
+    newEffect "poisonBurn" $ do
+        addEffect "player" "poison"
+        applyBurn
+```
+
+The first script applies the burn effect to the player, and removes the wet effect. The second script creates a new effect called poisonBurn, which applies the poison effect to the player, and then applies the burn effect. Now let's write an interpreter for our language. Now as much as I love Haskell, the vast majority of video games are made in a C like language, so instead of interpreting to `IO`, let's interpret to some (pseudo) C code:    
+
+```haskell
+toC :: ScriptExpr t a -> String
+toC (AddEffect target effect k) = target ++ "." ++ "addEffect(" ++ show effect ++ ");"
+toC (RemoveEffect target effect k) = target ++ "." ++ "removeEffect(" ++ show effect ++ ");"
+toC (NewEffect effect k) = "void " ++ effect ++ "() {"
+
+evalToC :: FreeScript t a -> [String]
+evalToC (Pure a) = [] 
+evalToC (Free (AddEffect target effect k)) = toC (AddEffect target effect k) : evalToC k
+evalToC (Free (RemoveEffect target effect k)) = toC (AddEffect target effect k) : evalToC k
+evalToC (Free (NewEffect effect k)) = toC (NewEffect effect k) : (evalToC k ++ ["}"])
+```
+
+Now let's see what we get when we run our scripts:
+
+```c
+> unlines evalToC applyBurn
+player.addEffect("poison");
+player.addEffect("burn");
+> unlines evalToC poisonBurnEffect
+void poisonBurn() {
+player.addEffect("poison");
+player.addEffect("burn");
+player.addEffect("wet");
+}
+```
+
+Wow! In essence we just wrote a full compiler for our scripting language directly into C! And we didn't have to write a single parser, or lexer! We just wrote a simple interpreter, and we got a full compiler for free! If your using something like Unity, you can "easily" compile this code at runtime into a DLL, and then load it into your game. With a few helper functions in C# you can hot reload the active scripts! If you're not using Unity then most languages have a FFI to C, which you can use to dynamically load code and call functions. Then when you ship your game you have to include your interpreter and GHC so that the user can interpret the scripts themselves into C, then your game can compile the C at runtime ([how would I do this?](https://stackoverflow.com/questions/56829292/can-you-dynamically-compile-and-link-load-c-code-into-a-c-program)) and use the FFI to call the user written functions. This approach makes your game easily moddable for your users! This method also resolves another issue in common in custom scripting languages is that they lack a proper ecosystem, and so common utilities like syntax highlighting and IDE support are not available. But with this method you can use any editor that supports Haskell, and ensure that all scripts are well typed and well formed. You also limit the power of the scripting language to only what you expose in the API, so you can ensure that the scripts are not too powerful and can't break the game (or have malware like this [infamous case](https://threatpost.com/cities-skylines-modder-banned-over-hidden-malware/178403/)).
+
+Let's finish up by making our language a bit more practical. First we want a way to dynamically pick a target and not just hardcode it into the script.
+
+```haskell
+data ScriptExpr t a
+  = AddEffect TargetName EffectName a
+    | RemoveEffect TargetName EffectName a
+    | NewEffect EffectName a
+    | GetCurrentPlayer a
+    | GetCurrentTarget a
+  deriving Functor
+
+getCurrentPlayer :: FreeScript t TargetName
+getCurrentPlayer = liftF $ GetCurrentPlayer "getCurrentPlayer()" 
+
+getCurrentTarget :: FreeScript t TargetName
+getCurrentTarget = liftF $ GetCurrentTarget "getCurrentTarget()"
+
+applyBurn :: TargetName -> FreeScript t ()
+applyBurn player = do
+    addEffect player "burn"
+    removeEffect player "wet"
+
+poisonBurnEffect :: FreeScript t ()
+poisonBurnEffect = do
+    newEffect "poisonBurn" $ do
+        target <- getCurrentTarget
+        addEffect target "poison"
+        applyBurn target
+```
+
+Now if we interpret our new script we get:
+
+```c
+> unlines evalToC poisonBurnEffect
+void poisonBurn() {
+getCurrentTarget().addEffect("poison");
+getCurrentTarget().addEffect("burn");
+getCurrentTarget().addEffect("wet");
+}
+```
+
+We can easily expand this into a full scripting language just by adding additional constructors to our data type. But I think you get the point from this demonstration. 
+
+# Why use free monads for game scripting?
+
+Now let's talk about some advantages and disadvantages to this method. Firstly, one of the advantages that matter to the functional programmers is that you get to use Haskell. Most of game development is firmly in the imperative C-like languages territory, and thus so are the scripting languages. Lua and C# are some of the most common off the shelf scripting languages, which needless to say are not functional. But with this method you can use Haskell, which is a functional language, and thus you can use functional programming techniques to make your game. Another advantage is that you get to use the full power of Haskell, including the type system, which means that you can ensure that your scripts are well typed and well formed. This means that you can catch more errors at compile time, instead of at runtime. However, more advanced errors do depend on the API design. Our current API would be able to catch errors relating to the use of variables, but it cannot protect from errors such as swapping the target name and effect name. This could be remedied by introducing a type constructor and a data type for both the types, since currently both are just type synonyms for `String`. Another beneficial aspect of free monads is the the flexibility, which means that you can easily extend the language with new features, and you can even combine multiple languages together. Free monads unlike normal monads are always composable, so you can have many languages which excel for a specific use case, while still offering computability with each other. The flexibility of interpreting the free monad into any monad also allows for a single script to be used in many ways. In our example we made our interpreter produce pseudo C, however, we could also interpret the script into `IO`, if we were making our game in Haskell, and we wouldn't have to change the game logic itself, only the interpreter. 
+
+However, these benefits come with some drawbacks as well. One major drawback for game developers using established game engines is that these ecosystems often provide a scripting language. So in that case there is no need to reinvent the wheel. Even if the game engine does not have a scripting language, often it is easier to integrate with an existing language than to create your own. Lua is a small performant embedded language frequently used for this purpose. Speaking of performance free monads are not known for their performance. The free monad is a very simple and elegant solution, but it is not fast, the implementation we used requires the entire monad to be traversed, each time we return it from a function. There are other free monad implementations that are more performant, but they are more complex and harder to understand, but luckily there are well established libraries which mostly solve this issue (like [this](https://hackage.haskell.org/package/free)). Another aspect that reduces the elegance of free monads is the amount of boilerplate. For each constructor in our functor we have to create a function that makes an lifted version of it, and we have to create a function that interprets it. This can be remedied by using Template Haskell to generate the boilerplate, but that is a bit more advanced. Another issue is that free monads are not very ergonomic to use. The syntax is not very nice, and it is not very easy to debug. This can be remedied by using a library that provides better ergonomics like [Polysemy](https://hackage.haskell.org/package/polysemy). Polysemy provides a DSL for free monads. However, Polysemy is not very beginner friendly and it has a steep learning curve. The debugging issue is more frustrating to resolve, since by nature the free monad does not perform any actual computations, instead you have to implement your own methods of logging of tracing using an interpreter. 
+
+Overall, the free monad provides a powerful abstraction over monadic operations. If you are determined to create your own scripting language then I believe that the free monad is the simplest way to do it, especially if your game is made in Haskell. It is simple, elegant, flexible and it allows you to use the full power of Haskell. However, if are using an established game engine like Unity and just want a scripting system, then you should leverage the existing ecosystem. Game development is hard enough as is, and if there is no need to complicate it further, then don't.
+
+I hope you learned something new from this article, and maybe for you next project you'll consider whether the free monad is the right abstraction for you!

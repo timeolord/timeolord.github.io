@@ -8,6 +8,8 @@
         "endofunctor",
         "fmap",
         "moddable",
+        "modders",
+        "monoids",
         "morphism",
         "morphisms"
     ]
