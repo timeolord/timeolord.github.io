@@ -1,9 +1,9 @@
 ---
 title: 2048 Using Comonads (The Ascended Way?)
 ---
-In this post, I'll explain what comonads are, how they relate to monads, and how they can be used to model the game logic of 2048. I will also present a simple program that demonstrate the comonadic approach to 2048, and go through the implementation step by step. Lastly I'll go over why you might choose to use comonads over other approaches, and what the pros and cons of each are.
+In this post, I'll explain what comonads are, how they relate to monads, and how they can be used to model the game logic of 2048. I will also present a simple program that demonstrates the comonadic approach to 2048, and go through the implementation step by step. Lastly, I'll go over why you might choose comonads over other approaches, and what the pros and cons of each are.
 
-I'll give a brief overview of the mechanics of 2048 for those who are unfamiliar. 2048 is a game where you slide tiles around a 4x4 grid. Each tile has a value, and when two tiles with the same value collide they merge into a single tile with the sum of their values. The goal of the game is to get a tile with the value of 2048. The game ends when the grid is full and there are no more moves to make. If you've never played it try it out [here](https://play2048.co/), just beware it can be very addictive.
+I'll give a brief overview of the mechanics of 2048 for those who are unfamiliar: 2048 is a game where you slide tiles around a 4x4 grid. Each tile has a value, and when two tiles with the same value collide they merge into a single tile with the sum of their values. The goal of the game is to get a tile with the value of 2048. The game ends when the grid is full and there are no more moves to make. If you've never played it, try it out [here](https://play2048.co/), just beware it can be very addictive.
 
 ## What is a Comonad anyways?
 Comonads are a concept from category theory, which is a branch of mathematics that studies abstract structures and their relationships. Category theory is also a useful tool for reasoning about programming, as it provides a common language to describe different types of computations and their properties.
@@ -17,6 +17,7 @@ To define a comonad in Haskell, we need three things:
 1. A type constructor `w` that is a functor, which means that it can map any function `f :: a -> b` to a function `fmap f :: w a -> w b`.
 2. A function `extract :: w a -> a` that can extract a value from any `w`-context.
 3. A function `extend :: (w a -> b) -> w a -> w b` that can apply any function `f :: w a -> b` to any `w`-context.
+
 These three components have to satisfy some laws that ensure that they behave well together. The laws are:
 
 ```haskell
@@ -50,7 +51,7 @@ In fact, every monad arises from an adjunction in this way, and every comonad ar
 
 ## Comonads In Haskell
 
-Now lets try to make the comonad in Haskell! Let's construct a Comonad by reversing the arrows of the Monad! Here we can see our Monad class that we're familiar with:
+Now let's try to make the comonad in Haskell! First we reverse the arrows of the monad. Here we can see our `Monad` class that we're familiar with:
 ```haskell
 class Functor m => Monad m where
   return :: a -> m a
@@ -64,7 +65,7 @@ class Functor w => Comonad w where
   duplicate :: w a -> w (w a)
   extend :: (w a -> b) -> w a -> w b
 ```
-I've renamed each function to their standard names. `extract` is the dual of `return`, `duplicate` is the dual of `join`, and `extend` is the dual of `bind`. Comonads can a have default implementations of `extend` and `duplicate` in terms of each other. Here's what that looks like:
+I've renamed each function to their standard names. `extract` is the dual of `return`, `duplicate` is the dual of `join`, and `extend` is the dual of `bind`. Comonads can have default implementations of `extend` and `duplicate` in terms of each other. Here's what that looks like:
 ```haskell
 duplicate :: w a -> w (w a)
 duplicate = extend id
@@ -81,13 +82,13 @@ instance Comonad Stream where
   extract (Stream a _) = a
   extend f s@(Stream _ t) = Stream (f s) (extend f t)
 ```
-Lets use this stream to get a better understanding of how a comonad works. The `extract` function is pretty simple, it just returns the value of the current element much like `head` for a list. The `extend` function is a bit more complicated. It takes a function `f :: Stream a -> b` and a stream `s :: Stream a`, and returns a new stream `Stream b`. The first element of the new stream is the result of applying `f` to the original stream `s`. The rest of the elements are the result of applying `f` to the tail of the original stream `t`. This means that `extend` is a way of applying a function to a stream, and getting back a new stream of the results. This is similar to how `map` is a way of applying a function to a list, and getting back a new list of the results.
+Let's use this stream to get a better understanding of how a comonad works. The `extract` function is pretty simple, it just returns the value of the current element much like `head` for a list. The `extend` function is a bit more complicated. It takes a function `f :: Stream a -> b` and a stream `s :: Stream a`, and returns a new stream `Stream b`. The first element of the new stream is the result of applying `f` to the original stream `s`. The rest of the elements are the result of applying `f` to the tail of the original stream `t`. This means that `extend` is a way of applying a function to a stream, and getting back a new stream of the results. This is similar to how `map` is a way of applying a function to a list, and getting back a new list of the results.
 
 TODO USE A GRID AND ADD PICTURES TO DEMONSTRATE THE FUNCTIONS
 
 ## Using Comonads to Model 2048
 
-Now that we have a basic understanding of what a comonad is, lets use it to model the game logic of 2048. There are many approaches to modeling the grid of tiles in 2048, commonly used is a 2d array, but maps are also a good choice. In the same way that the `Stream` comonad is similar to the list, the `Store` comonad is similar to the `Map` data structure. Here's what it looks like:
+Now that we have a basic understanding of what a comonad is, let's use it to model the game logic of 2048. There are many approaches to modeling the grid of tiles in 2048. The most commonly used data structure is a 2d array, but maps are also a good choice. In the same way that the `Stream` comonad is similar to the list, the `Store` comonad is similar to the `Map` data structure. Here's what it looks like:
 ```haskell
 data Store s a = Store (s -> a) s
 ```
@@ -97,25 +98,19 @@ instance Comonad (Store s) where
   extract (Store f s) = f s
   duplicate (Store f s) = Store (Store f) s
 ```
-For our key datatype `s`, we'll use a pair of integers `(Int, Int)`. This will allow us to represent the coordinates of each tile in the grid. Our value datatype `a` will be a `Int`, which will allow us to represent the value of each tile. With that we can create a type for our grid and also include a datatype for the direction of a move:
+For our key datatype `s`, we'll use a pair of integers `(Int, Int)`. This will allow us to represent the coordinates of each tile in the grid. Our value datatype `a` will be an `Int`, which will allow us to represent the value of each tile. With that we can create a type for our grid and also include a datatype for the direction of a move:
 ```haskell
 data Direction = L | R | U | D deriving (Eq)
 type Position = (Int, Int)
 type Value = Int
 type Grid a = Store Position a
 ```
-Now that we have a type for our grid, we can start implementing the game logic. Going back to what I said previously, comonads are perfect for computations that need a context. For implementing movement in 2048, we need to know the direction of the move, and the row / column of the tile. There is a handy helper function that will allow us implement this cleanly:
+Now that we have a type for our grid, we can start implementing the game logic. Going back to what I said previously, comonads are perfect for computations that need a context. For implementing movement in 2048, we need to know the direction of the move, and the row / column of the tile. There is a handy helper function that will allow us to implement this cleanly:
 ```haskell
 experiment :: Functor f => (s -> f s) -> Store s a -> f a
 experiment f (Store g s) = fmap g (f s)
 ```
-TODO
-This function seems strange at first but I'll demonstrate how it works. Lets say we have a list of indices and we want to know the values of the tiles at those indices. We can use `experiment` to do this:
-```haskell
-getTiles :: [Position] -> Grid Value -> [Value]
-getTiles ps g = experiment ps g
-```
-We can use `experiment` to retrieve all the tiles in the current tile's row or column. Here's what that looks like:
+This function seems strange at first but I'll demonstrate how it works. We can use `experiment` to retrieve all the tiles in the current tile's row or column. Here's what that looks like:
 ```haskell
 rowIndices :: Direction -> Position -> [Position]
 rowIndices dir (x, y) =
@@ -149,7 +144,7 @@ gameRule dir (Store f s) =
   where (x, y) = s
         g = Store f s
 ```
-`moveRow` implements the movement and merging of the tiles in a row. `gameRule` uses `toRow` to get the row or column of the current tile, and then uses `moveRow` to move the tiles in that row. The `!!` operator is used to get the value of the tile at the current position. `gameRule` is a function that takes a direction and a grid, and returns the value of the tile at the current position after the move. If notice the type signature of `gameRule` you'll see that if we partially apply it to a direction, we get a function perfect for `extend`.
+`moveRow` implements the movement and merging of the tiles in a row. `gameRule` uses `toRow` to get the row or column of the current tile, and then uses `moveRow` to move the tiles in that row. The `!!` operator is used to get the value of the tile at the current position. `gameRule` is a function that takes a direction and a grid, and returns the value of the tile at the current position after the move. Notice the type signature of `gameRule` you'll see that if we partially apply it to a direction, we get a function perfect for `extend`.
 
 The other game mechanic is the spawning of the game tiles after each move. We can use a simple if statement to implement that. The initial value of a new tile is always 2, but in the real game there is a chance for the tile to be 4 as well. For the sake of simplicity I am avoiding randomness. Here's what that looks like:
 ```haskell
@@ -179,14 +174,14 @@ initialState :: Grid Value
 initialState = addNewTile $ addNewTile $ Store (const 0) (0, 0)
 ```
 
-Last major thing we need to implement is displaying the grid. We could use `experiment`, but that would return a 1d list, which is more annoying to display. Instead we can just use a 2d list comprehension to get the values of all the tiles in the grid. Here's what that looks like:
+The last major thing we need to implement is displaying the grid. We could use `experiment`, but that would return a 1d list, which is more annoying to display. Instead, we can just use a 2d list comprehension to get the values of all the tiles in the grid. Here's what that looks like:
 ```haskell
 render :: Grid Value -> String
 render g = unlines $ map (unwords . map show) $ toLists g
     where toLists (Store f s) = reverse [[f (x, y) | x <- [0..maxSize]] | y <- [0..maxSize]]
 ```
 
-Now we just need to handle IO and we're done! We can use `getLine` to get the direction of the move from the user, and then use `extend` and `gameRule` to get next state. We can then use `addNewTile` to add a new tile to the grid, and then use `render` to display the grid. Here's what that looks like:
+Now we just need to handle IO and we're done! We can use `getLine` to get the direction of the move from the user, and then use `extend` and `gameRule` to get the next state. We can then use `addNewTile` to add a new tile to the grid, and then use `render` to display the grid. Here's what that looks like:
 ```haskell
 endCondition :: Grid Value -> IO Bool
 endCondition g 
@@ -243,12 +238,14 @@ mainLoop g = do
       _   -> mainLoop g
 ```
 
-Now that the memoization is in place, you can play 2048 to your hearts content! You can find the full source code and GitHub project [here](https://github.com/timeolord/Comonadic-2048).
+Now that the memoization is in place, you can play 2048 to your heart's content! You can find the full source code and GitHub project [here](https://github.com/timeolord/Comonadic-2048). Here's a gif of the game in action:
+
+![](/images/2048.gif)
 
 ## Why use Comonads?
 
-Now that we have a working implementation of 2048 using comonads, let's talk about why you might want to use comonads over other approaches. The main advantage for the our implementation is the elegance of the solution. The comonadic approach is very declarative and the main game logic can be expressed in just a few lines of code. Compared working directly with a 2d list, like in this [implementation](https://github.com/gregorulm/h2048/blob/master/h2048.hs) (no shade to the author by the way), the vast majority of the code is focused on implementing game logic, whereas our game logic is implemented in only a few functions, and half of the code is simply boilerplate for the comonad. If we used a library that implements a comonad for us, our game would be less than 50 lines of code. There's also the personal but still important style of the code, using comonads we can write declarative code. Additionally adding new game mechanics is very easy, since you can trivially compose functions of the form `Comonad w => w a -> b`. Other advantages that we didn't see in our example is that comonads can be used to model many other things, such as streams, zippers, lenses, and cellular automata, and by writing code that is generic over comonads you can reuse it for all of these different things, so that allows for us to experiment with different data structures easily and compare performance. Lastly and most importantly there is the flex of being able to say that you used comonads, and with that you can take one more step towards Haskell enlightenment.
+Now that we have a working implementation of 2048 using comonads, let's talk about why you might want to use comonads over other approaches. The main advantage for the our implementation is the elegance of the solution. The comonadic approach is very declarative and the main game logic can be expressed in just a few lines of code. Compared to working directly with a 2d list, like in this [implementation](https://github.com/gregorulm/h2048/blob/master/h2048.hs) (no shade to the author, by the way), the vast majority of the code is focused on implementing game logic, whereas our game logic is implemented in only a few functions, and half of the code is simply boilerplate for the comonad. If we used a library that implements a comonad for us, our game would be less than 50 lines of code. The style of the code is a personal but important factor and by using comonads we can write declarative code. Additionally, adding new game mechanics is very easy, since you can trivially compose functions of the form `Comonad w => w a -> b`. Other advantages that we didn't see in our example are that comonads can be used to model many other things, such as streams, zippers, lenses, and cellular automata, and by writing code that is generic over comonads you can reuse it for all of these different things, which allows us to experiment with different data structures easily and compare performance. Lastly and most importantly, there is the flex of being able to say that you used comonads, and with that you can take one more step towards Haskell enlightenment.
 
-However, it's not all sunshine and rainbows. The path to enlightenment is a lonely one. Most programmers don't know what a comonad is, and even fewer know how to use them. This means that if you use comonads in your code, you will have to explain what they are and how they work to your peers. That also means if you need help chances are you'll have to figure it out yourself. Compare that to the number of monad tutorials. Since comonads are a niche, most libraries and tools don't have support for them. So chances are you'll have to write a lot of boilerplate code just to get things working. Lastly, as we saw with our implementation, comonads can be prohibitively slow if implemented naively, which adds another yet another layer of complexity.
+However, it's not all sunshine and rainbows. The path to enlightenment is a lonely one. Most programmers don't know what a comonad is, and even fewer know how to use one. This means that if you use comonads in your code, you will have to explain what they are and how they work to your peers. This also means that if you need help, chances are, you'll have to figure it out yourself. Compare that to the number of monad tutorials. Since comonads are niche, most libraries and tools don't have support for them. Therefore, it's likely that you'll have to write a lot of boilerplate code just to get things working. Lastly, as we saw with our implementation, comonads can be prohibitively slow if implemented naively, which adds yet another layer of complexity.
 
-Ultimately these trade offs are up to you to decide. But it's always better to have something and not need it. So I encourage you to try using comonads in your next project, and see if they work for you.
+Ultimately, these trade-offs are up to you to decide. But it's always better to have something and not need it. So I encourage you to try using comonads in your next project, and see if they work for you.
