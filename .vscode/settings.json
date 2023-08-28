@@ -7,10 +7,15 @@
         "debuggable",
         "endofunctor",
         "fmap",
+        "Laarhoven",
         "moddable",
         "modders",
         "monoids",
         "morphism",
-        "morphisms"
+        "morphisms",
+        "subtyping",
+        "typeclass",
+        "typeclasses",
+        "Yoneda"
     ]
 }
