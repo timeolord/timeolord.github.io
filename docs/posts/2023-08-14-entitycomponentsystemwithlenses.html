@@ -33,7 +33,7 @@
         
     </section>
     <section>
-        <p>Entity Component Systems (ECS) are the new hot thing in game development. Both Unity and Unreal have adopted them, with major improvements compared to the classic object orientated style. I’ve been using them for a while now, and I’ve found them to be a great way to organize game code. In this post I wanted to implement my own ECS in Haskell, while using lenses to make it very concise. I’ll also show how to use the ECS to implement a simple physics simulator.</p>
+        <p>Entity Component Systems (ECS) are the new trend in game development. Both Unity and Unreal have adopted them, with significant improvements over the classic object-oriented style. I have been using them for a while now, and I find them to be a great way to organize game code. In this post, I will implement my own ECS in Haskell, using lenses to make it very concise. I will also demonstrate how to use the ECS to implement a simple physics simulator.</p>
 <h2 id="what-is-ecs">What is ECS?</h2>
 <p>ECS is a design pattern for developing games and simulations that focuses on the composition of entities, components, and systems. Here is a brief overview of each concept:</p>
 <ul>
@@ -45,14 +45,14 @@ The main advantages of ECS are:</p></li>
 <li><p>Performance: Systems can process entities in batches, taking advantage of cache locality and parallelism. Components can also be stored in memory-efficient ways, such as arrays or pools.</p></li>
 <li><p>Maintainability: Systems are decoupled from each other and from the data they operate on, making the code easier to understand and debug.</p></li>
 </ul>
-<p>In our implementation I will focus on the modularity aspect, and I will show how to use lenses to make the code very concise and easy to use. Since this is in Haskell, I won’t worry about performance for our implementation, and often focusing on performance in Haskell can make the code quite ugly.</p>
+<p>In our implementation, we will focus on the modularity aspect and show how to use lenses to make the code very concise and easy to use. Since this is in Haskell, we will not worry about performance for our implementation, as focusing on performance in Haskell can often make the code quite ugly.</p>
 <h2 id="what-are-lenses">What are Lenses?</h2>
-<p>Lenses have been around for a while, but they have recently become popular in the Haskell community (for a <a href="https://github.com/ekmett/lens/wiki/History-of-Lenses">brief history</a>). There are two primary libraries for lenses, <code>lens</code> and <code>optics</code>. We will be using <code>lens</code> for this post. The basic idea of a lens is that it is a collection of a getter and a setter. So we can imagine something like this:</p>
+<p>Lenses have been around for a while, but they have recently become popular in the Haskell community (for a <a href="https://github.com/ekmett/lens/wiki/History-of-Lenses">brief history</a>). There are two primary libraries for lenses, <code>lens</code> and <code>optics</code>. We will be using <code>lens</code> for this post. The basic idea of a lens is that it is a collection of a getter and a setter. We can imagine something like this:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Lens</span> a b <span class="ot">=</span> <span class="dt">Lens</span> {</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    get ::</span> a <span class="ot">-&gt;</span> b,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">    set ::</span> b <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>These operate on <code>b</code> and either return an <code>a</code> in that <code>b</code> or returns a new <code>b</code> with the given <code>a</code> respectively. If we have a record we can create a lens for each field of the record:</p>
+<p>These operate on <code>b</code> and either return an <code>a</code> in that <code>b</code> or returns a new <code>b</code> with the given <code>a</code>, respectively. If we have a record, we can create a lens for each field of the record:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Foo</span> <span class="ot">=</span> <span class="dt">Foo</span> {<span class="ot"> _bar ::</span> <span class="dt">Int</span>,<span class="ot"> _baz ::</span> <span class="dt">Int</span> }</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>makeLenses '<span class="dt">'Foo</span></span></code></pre></div>
 <p>This uses the <code>lens</code> library to automatically generate lenses for each field of the record using template Haskell. The generated lenses require the fields to be prepended with an underscore. We can use these lenses to get and set the fields of the record:</p>

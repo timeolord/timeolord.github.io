@@ -1,7 +1,7 @@
 ---
 title: Entity Component System with Lenses
 ---
-Entity Component Systems (ECS) are the new hot thing in game development. Both Unity and Unreal have adopted them, with major improvements compared to the classic object orientated style. I've been using them for a while now, and I've found them to be a great way to organize game code. In this post I wanted to implement my own ECS in Haskell, while using lenses to make it very concise. I'll also show how to use the ECS to implement a simple physics simulator.
+Entity Component Systems (ECS) are the new trend in game development. Both Unity and Unreal have adopted them, with significant improvements over the classic object-oriented style. I have been using them for a while now, and I find them to be a great way to organize game code. In this post, I will implement my own ECS in Haskell, using lenses to make it very concise. I will also demonstrate how to use the ECS to implement a simple physics simulator.
 
 ## What is ECS?
 
@@ -16,18 +16,18 @@ The main advantages of ECS are:
 - Performance: Systems can process entities in batches, taking advantage of cache locality and parallelism. Components can also be stored in memory-efficient ways, such as arrays or pools.
 - Maintainability: Systems are decoupled from each other and from the data they operate on, making the code easier to understand and debug.
 
-In our implementation I will focus on the modularity aspect, and I will show how to use lenses to make the code very concise and easy to use. Since this is in Haskell, I won't worry about performance for our implementation, and often focusing on performance in Haskell can make the code quite ugly. 
+In our implementation, we will focus on the modularity aspect and show how to use lenses to make the code very concise and easy to use. Since this is in Haskell, we will not worry about performance for our implementation, as focusing on performance in Haskell can often make the code quite ugly.
 
 ## What are Lenses?
 
-Lenses have been around for a while, but they have recently become popular in the Haskell community (for a [brief history](https://github.com/ekmett/lens/wiki/History-of-Lenses)). There are two primary libraries for lenses, `lens` and `optics`. We will be using `lens` for this post. The basic idea of a lens is that it is a collection of a getter and a setter. So we can imagine something like this:
+Lenses have been around for a while, but they have recently become popular in the Haskell community (for a [brief history](https://github.com/ekmett/lens/wiki/History-of-Lenses)). There are two primary libraries for lenses, `lens` and `optics`. We will be using `lens` for this post. The basic idea of a lens is that it is a collection of a getter and a setter. We can imagine something like this:
 ```haskell
 data Lens a b = Lens {
     get :: a -> b,
     set :: b -> a -> a
 }
 ```
-These operate on `b` and either return an `a` in that `b` or returns a new `b` with the given `a` respectively. If we have a record we can create a lens for each field of the record:
+These operate on `b` and either return an `a` in that `b` or returns a new `b` with the given `a`, respectively. If we have a record, we can create a lens for each field of the record:
 ```haskell
 data Foo = Foo { _bar :: Int, _baz :: Int }
 makeLenses ''Foo
