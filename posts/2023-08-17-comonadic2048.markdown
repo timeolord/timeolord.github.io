@@ -84,8 +84,6 @@ instance Comonad Stream where
 ```
 Let's use this stream to get a better understanding of how a comonad works. The `extract` function is pretty simple, it just returns the value of the current element much like `head` for a list. The `extend` function is a bit more complicated. It takes a function `f :: Stream a -> b` and a stream `s :: Stream a`, and returns a new stream `Stream b`. The first element of the new stream is the result of applying `f` to the original stream `s`. The rest of the elements are the result of applying `f` to the tail of the original stream `t`. This means that `extend` is a way of applying a function to a stream, and getting back a new stream of the results. This is similar to how `map` is a way of applying a function to a list, and getting back a new list of the results.
 
-TODO USE A GRID AND ADD PICTURES TO DEMONSTRATE THE FUNCTIONS
-
 ## Using Comonads to Model 2048
 
 Now that we have a basic understanding of what a comonad is, let's use it to model the game logic of 2048. There are many approaches to modeling the grid of tiles in 2048. The most commonly used data structure is a 2d array, but maps are also a good choice. In the same way that the `Stream` comonad is similar to the list, the `Store` comonad is similar to the `Map` data structure. Here's what it looks like:
