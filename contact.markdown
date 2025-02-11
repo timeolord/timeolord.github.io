@@ -1,4 +1,4 @@
 ---
 title: Contact
 ---
-Email me at: allan.wei67 (at) gmail.com
+Email me at: timeolord (at) gmail.com
