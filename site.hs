@@ -3,8 +3,6 @@
 import           Data.Monoid              (mappend)
 import           Hakyll
 import           Text.Pandoc.Highlighting (Style, pygments, styleToCss)
-import           Text.Pandoc.Options      (ReaderOptions (..),
-                                           WriterOptions (..))
 
 --------------------------------------------------------------------------------
 
@@ -15,14 +13,6 @@ config = defaultConfiguration
 
 pandocCodeStyle :: Style
 pandocCodeStyle = pygments
-
-pandocCompiler' :: Compiler (Item String)
-pandocCompiler' =
-  pandocCompilerWith
-    defaultHakyllReaderOptions
-    defaultHakyllWriterOptions
-      { writerHighlightStyle = Just pandocCodeStyle
-      }
 
 main :: IO ()
 main =
@@ -42,15 +32,15 @@ main =
         compile $ do
             makeItem $ styleToCss pandocCodeStyle
 
-    match (fromList ["about.rst", "contact.markdown"]) $ do
+    match "contact.markdown" $ do
         route   $ setExtension "html"
-        compile $ pandocCompiler'
+        compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
 
     match "posts/*" $ do
         route $ setExtension "html"
-        compile $ pandocCompiler'
+        compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/post.html"    postCtx
             >>= loadAndApplyTemplate "templates/default.html" postCtx
             >>= relativizeUrls
