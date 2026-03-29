@@ -5,7 +5,7 @@ Let's say you are making a game and you want to have a scripting language for yo
 
 1. You can make your game more moddable, by loading player made scripts at runtime.
 2. You can make your game designers job easier, because they don't have to be familiar with the entire codebase to make changes, just the API for the language.
-3. You can make increase your productivity by reducing compile times, because you don't have to recompile the entire game to make changes, you can just reload the scripts at runtime.
+3. You can increase your productivity by reducing compile times, because you don't have to recompile the entire game to make changes, you can just reload the scripts at runtime.
 4. You can make your game more debuggable, by allowing you to inspect the state and even change it at runtime.
 
 But implementing a whole interpreter is a lot of work! Especially if you've never written a compiler or interpreter before. You'll have to deal with parsing grammars, program semantics, evaluation, and more. And if you want to make your language more powerful or performant, that means more work, which means less time spent actually making the game.  But what if I told you that you can get all of these benefits with a fraction of the work? Well, you can, by using free monads.
@@ -167,7 +167,7 @@ newEffect :: EffectName  -> FreeScript t a -> FreeScript t a
 newEffect effect script = Free $ NewEffect effect script
 ```
 
-For `newEffect` we can't use `liftF` so we have to use `Free` directly. So let me explain what our scripting language is meant to do. AddEffect and RemoveEffect will add add or remove an effect from a target. NewEffect will create a new effect, and then run the script that is passed to it. This way we can compose effects together. Now let's write two simple scripts to demonstrate:
+For `newEffect` we can't use `liftF` so we have to use `Free` directly. So let me explain what our scripting language is meant to do. AddEffect and RemoveEffect will add or remove an effect from a target. NewEffect will create a new effect, and then run the script that is passed to it. This way we can compose effects together. Now let's write two simple scripts to demonstrate:
 
 ```haskell
 applyBurn :: FreeScript t ()
