@@ -14,6 +14,9 @@ config = defaultConfiguration
 pandocCodeStyle :: Style
 pandocCodeStyle = pygments
 
+publishedPosts :: Pattern
+publishedPosts = "posts/*" .&&. complement "posts/*WIP*"
+
 main :: IO ()
 main =
 
@@ -38,7 +41,7 @@ main =
             >>= loadAndApplyTemplate "templates/default.html" defaultContext
             >>= relativizeUrls
 
-    match "posts/*" $ do
+    match publishedPosts $ do
         route $ setExtension "html"
         compile $ pandocCompiler
             >>= loadAndApplyTemplate "templates/post.html"    postCtx
@@ -48,7 +51,7 @@ main =
     create ["archive.html"] $ do
         route idRoute
         compile $ do
-            posts <- recentFirst =<< loadAll "posts/*"
+            posts <- recentFirst =<< loadAll publishedPosts
             let archiveCtx =
                     listField "posts" postCtx (return posts) `mappend`
                     constField "title" "Blogs"            `mappend`
@@ -62,7 +65,7 @@ main =
     match "index.html" $ do
         route idRoute
         compile $ do
-            posts <- recentFirst =<< loadAll "posts/*"
+            posts <- recentFirst =<< loadAll publishedPosts
             let indexCtx =
                     listField "posts" postCtx (return posts) `mappend`
                     defaultContext

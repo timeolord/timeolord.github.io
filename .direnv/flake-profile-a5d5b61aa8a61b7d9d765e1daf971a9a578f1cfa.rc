@@ -41,7 +41,7 @@ NIX_ENFORCE_NO_NATIVE='1'
 export NIX_ENFORCE_NO_NATIVE
 NIX_HARDENING_ENABLE='bindnow format fortify fortify3 libcxxhardeningfast pic relro stackclashprotection stackprotector strictflexarrays1 strictoverflow zerocallusedregs'
 export NIX_HARDENING_ENABLE
-NIX_LDFLAGS='-rpath /home/melkmobile/website/outputs/out/lib  -L/nix/store/2kdz3m7ic8w226pcvkz1dlg169v91p6a-zlib-1.3.2/lib -L/nix/store/4zmr3iw5s719y5zz7h2dnym67x2i6n23-ncurses-6.6/lib -L/nix/store/8zgy79sw0zjwfcfp78p883hkkdw0pdzs-libffi-3.5.2/lib -L/nix/store/6nrfjqgkbgwjrszrn9dfv5k7kj7vxxfk-elfutils-0.194/lib -L/nix/store/9q9777l352qfg127kwbfilali7mcynr1-gmp-with-cxx-6.3.0/lib -L/nix/store/00p2pzg3i0bdlg9iab09jyr46lnvpi6n-numactl-2.0.18/lib -L/nix/store/2kdz3m7ic8w226pcvkz1dlg169v91p6a-zlib-1.3.2/lib -L/nix/store/4zmr3iw5s719y5zz7h2dnym67x2i6n23-ncurses-6.6/lib -L/nix/store/8zgy79sw0zjwfcfp78p883hkkdw0pdzs-libffi-3.5.2/lib -L/nix/store/6nrfjqgkbgwjrszrn9dfv5k7kj7vxxfk-elfutils-0.194/lib -L/nix/store/9q9777l352qfg127kwbfilali7mcynr1-gmp-with-cxx-6.3.0/lib -L/nix/store/00p2pzg3i0bdlg9iab09jyr46lnvpi6n-numactl-2.0.18/lib'
+NIX_LDFLAGS='-rpath /home/melk-pc/website/outputs/out/lib  -L/nix/store/2kdz3m7ic8w226pcvkz1dlg169v91p6a-zlib-1.3.2/lib -L/nix/store/4zmr3iw5s719y5zz7h2dnym67x2i6n23-ncurses-6.6/lib -L/nix/store/8zgy79sw0zjwfcfp78p883hkkdw0pdzs-libffi-3.5.2/lib -L/nix/store/6nrfjqgkbgwjrszrn9dfv5k7kj7vxxfk-elfutils-0.194/lib -L/nix/store/9q9777l352qfg127kwbfilali7mcynr1-gmp-with-cxx-6.3.0/lib -L/nix/store/00p2pzg3i0bdlg9iab09jyr46lnvpi6n-numactl-2.0.18/lib -L/nix/store/2kdz3m7ic8w226pcvkz1dlg169v91p6a-zlib-1.3.2/lib -L/nix/store/4zmr3iw5s719y5zz7h2dnym67x2i6n23-ncurses-6.6/lib -L/nix/store/8zgy79sw0zjwfcfp78p883hkkdw0pdzs-libffi-3.5.2/lib -L/nix/store/6nrfjqgkbgwjrszrn9dfv5k7kj7vxxfk-elfutils-0.194/lib -L/nix/store/9q9777l352qfg127kwbfilali7mcynr1-gmp-with-cxx-6.3.0/lib -L/nix/store/00p2pzg3i0bdlg9iab09jyr46lnvpi6n-numactl-2.0.18/lib'
 export NIX_LDFLAGS
 NIX_NO_SELF_RPATH='1'
 NIX_STORE='/nix/store'
@@ -134,7 +134,7 @@ name='nix-shell-env'
 export name
 nativeBuildInputs=''
 export nativeBuildInputs
-out='/home/melkmobile/website/outputs/out'
+out='/home/melk-pc/website/outputs/out'
 export out
 outputBin='out'
 outputDev='out'
@@ -165,7 +165,7 @@ preConfigurePhases=' updateAutotoolsGnuConfigScriptsPhase'
 declare -a preFixupHooks=('_moveToShare' '_multioutDocs' '_multioutDevs' )
 preferLocalBuild='1'
 export preferLocalBuild
-prefix='/home/melkmobile/website/outputs/out'
+prefix='/home/melk-pc/website/outputs/out'
 declare -a propagatedBuildDepFiles=('propagated-build-build-deps' 'propagated-native-build-inputs' 'propagated-build-target-deps' )
 propagatedBuildInputs=''
 export propagatedBuildInputs
