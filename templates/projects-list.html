@@ -1,0 +1,16 @@
+<div class="project-grid">
+$for(projects)$
+  <div class="project-card">
+    <a href="$link$" target="_blank" rel="noopener">
+      <img class="project-preview" data-src="$link$" alt="$title$ preview" />
+      <h2>$title$</h2>
+    </a>
+    <p>$description$</p>
+  </div>
+$endfor$
+</div>
+<script>
+document.querySelectorAll('.project-preview').forEach(img => {
+  img.src = 'https://api.microlink.io/?url=' + encodeURIComponent(img.dataset.src) + '&screenshot=true&meta=false&embed=screenshot.url';
+});
+</script>

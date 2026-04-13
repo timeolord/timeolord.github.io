@@ -35,6 +35,21 @@ main =
         compile $ do
             makeItem $ styleToCss pandocCodeStyle
 
+    match "projects/*" $ compile pandocCompiler
+
+    create ["projects.html"] $ do
+        route idRoute
+        compile $ do
+            projects <- loadAll "projects/*"
+            let projectsCtx =
+                    listField "projects" defaultContext (return projects) `mappend`
+                    constField "title" "Projects"                         `mappend`
+                    defaultContext
+            makeItem ""
+                >>= loadAndApplyTemplate "templates/projects-list.html" projectsCtx
+                >>= loadAndApplyTemplate "templates/default.html"       projectsCtx
+                >>= relativizeUrls
+
     match "contact.markdown" $ do
         route   $ setExtension "html"
         compile $ pandocCompiler
