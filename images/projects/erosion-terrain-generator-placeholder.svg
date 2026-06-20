@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Erosion terrain generator preview placeholder</title>
+  <desc id="desc">Layered terrain ridges with blue erosion paths.</desc>
+  <rect width="1200" height="675" fill="#f4f7f2"/>
+  <path d="M0 508 C130 420 225 458 340 365 C482 250 608 330 738 232 C880 124 1010 185 1200 90 L1200 675 L0 675 Z" fill="#9dbf8b"/>
+  <path d="M0 578 C164 490 260 520 395 430 C560 320 690 395 815 315 C958 225 1060 250 1200 188 L1200 675 L0 675 Z" fill="#52785f"/>
+  <path d="M0 632 C190 575 318 590 456 520 C605 445 720 505 860 442 C1010 375 1100 382 1200 338 L1200 675 L0 675 Z" fill="#294a45"/>
+  <path d="M557 245 C570 322 610 372 594 444 C580 510 622 565 640 675" fill="none" stroke="#74b8c7" stroke-width="18" stroke-linecap="round"/>
+  <path d="M764 319 C735 368 716 418 732 474 C750 540 715 594 706 675" fill="none" stroke="#a2d7df" stroke-width="10" stroke-linecap="round"/>
+  <text x="64" y="94" fill="#294a45" font-family="serif" font-size="46">terrain erosion</text>
+</svg>

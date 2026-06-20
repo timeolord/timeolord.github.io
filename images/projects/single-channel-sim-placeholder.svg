@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Single channel simulator preview placeholder</title>
+  <desc id="desc">Ion channel current traces over a clean plotting surface.</desc>
+  <rect width="1200" height="675" fill="#f6f7fb"/>
+  <rect x="116" y="108" width="968" height="454" fill="#ffffff" stroke="#d5dce8" stroke-width="4"/>
+  <g stroke="#e8edf5" stroke-width="2">
+    <path d="M116 199 H1084"/>
+    <path d="M116 290 H1084"/>
+    <path d="M116 381 H1084"/>
+    <path d="M116 472 H1084"/>
+    <path d="M310 108 V562"/>
+    <path d="M504 108 V562"/>
+    <path d="M698 108 V562"/>
+    <path d="M892 108 V562"/>
+  </g>
+  <path d="M140 248 H220 V420 H315 V248 H442 V420 H535 V248 H650 V420 H760 V248 H884 V420 H1020" fill="none" stroke="#1a9485" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M140 340 C210 315 270 368 340 342 C410 318 470 365 540 340 C620 310 690 372 760 340 C835 306 910 370 1020 334" fill="none" stroke="#fb8694" stroke-width="8" stroke-linecap="round"/>
+  <text x="136" y="86" fill="#25303b" font-family="serif" font-size="44">single channel sim</text>
+</svg>
