@@ -81,8 +81,10 @@ main =
         route idRoute
         compile $ do
             posts <- recentFirst =<< loadAll publishedPosts
+            projects <- loadAll "projects/*"
             let indexCtx =
-                    listField "posts" postCtx (return posts) `mappend`
+                    listField "posts" postCtx (return posts)       `mappend`
+                    listField "projects" defaultContext (return projects) `mappend`
                     defaultContext
 
             getResourceBody

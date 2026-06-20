@@ -1,5 +1,6 @@
 ---
 title: Erosion Terrain Generator
+id: erosion-terrain-generator
 link: https://github.com/timeolord/erosion-terrain-generator/
 image: /images/projects/erosion-terrain-generator.png
 image_alt: Placeholder preview for the erosion terrain generator project

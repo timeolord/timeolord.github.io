@@ -1,5 +1,6 @@
 ---
 title: Single Channel Sim
+id: single-channel-sim
 link: https://www.melkyway.ca/single-channel-sim
 image: /images/projects/single-channel-sim.png
 image_alt: Placeholder preview for the single channel simulator project
