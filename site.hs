@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
+import           Data.List                (sortBy)
+import           Data.Maybe               (fromMaybe)
 import           Data.Monoid              (mappend)
+import           Data.Ord                 (Down (..), comparing)
 import           Hakyll
 import           Text.Pandoc.Highlighting (Style, pygments, styleToCss)
 
@@ -40,7 +43,7 @@ main =
     create ["projects.html"] $ do
         route idRoute
         compile $ do
-            projects <- loadAll "projects/*"
+            projects <- sort_by_year =<< loadAll "projects/*"
             let projectsCtx =
                     listField "projects" defaultContext (return projects) `mappend`
                     constField "title" "Projects"                         `mappend`
@@ -81,7 +84,7 @@ main =
         route idRoute
         compile $ do
             posts <- recentFirst =<< loadAll publishedPosts
-            projects <- loadAll "projects/*"
+            projects <- sort_by_year =<< loadAll "projects/*"
             let indexCtx =
                     listField "posts" postCtx (return posts)       `mappend`
                     listField "projects" defaultContext (return projects) `mappend`
@@ -100,3 +103,10 @@ postCtx :: Context String
 postCtx =
     dateField "date" "%B %e, %Y" `mappend`
     defaultContext
+
+sort_by_year :: [Item String] -> Compiler [Item String]
+sort_by_year items = do
+    pairs <- mapM (\item -> do
+        year <- getMetadataField (itemIdentifier item) "year"
+        return (fromMaybe "" year, item)) items
+    return $ map snd $ sortBy (comparing (Down . fst)) pairs

@@ -1,6 +1,7 @@
 ---
 title: Monte Carlo Single Channel Simulator
 id: single-channel-sim
+year: 2022
 link: https://www.melkyway.ca/single-channel-sim
 image: /images/projects/single-channel-sim.png
 image_alt: the single channel simulator dashboard

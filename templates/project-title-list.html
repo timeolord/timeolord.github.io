@@ -1,7 +1,8 @@
 <ul>
     $for(projects)$
-        <li>
+        <li class="project-title-row">
             <a href="/projects.html#$id$">$title$</a>
+            $if(year)$<span class="project-year">$year$</span>$endif$
         </li>
     $endfor$
 </ul>

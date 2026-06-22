@@ -6,9 +6,10 @@ $for(projects)$
       <img class="project-image" src="$image$" alt="$image_alt$">
     </a>
     $endif$
-    <a href="$link$" target="_blank" rel="noopener">
-      <h2>$title$</h2>
-    </a>
+    <div class="project-title-row">
+      <a href="$link$" target="_blank" rel="noopener"><h2>$title$</h2></a>
+      $if(year)$<span class="project-year">$year$</span>$endif$
+    </div>
     <p>$description$</p>
   </div>
 $endfor$

@@ -190,3 +190,15 @@ main blockquote {
   object-fit: cover;
   margin-bottom: 1em;
 }
+
+.project-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6em;
+}
+
+.project-year {
+  color: #000;
+  white-space: nowrap;
+}
