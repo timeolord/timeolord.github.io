@@ -82,7 +82,7 @@ data Store a b = Store
   , peek :: a -> b
   }
 ```
-While lens are important, in fact it is only one of many in a larger field called optics. Optics are a generalization, and they include many other types. We will briefly describe the key characteristics of the other types of optics. 
+While lens are important, in fact it is only one of many in a larger field called optics. Optics are a generalization, and they include many other types. We will briefly describe the key characteristics of the other types of optics.
 
 1. Getter is a read-only view of exactly one value.
 2. Setter is a write-only view of exactly one value.
@@ -92,11 +92,11 @@ While lens are important, in fact it is only one of many in a larger field calle
 6. Iso is short for Isomorphism and is a lens that can be used in both directions.
 7. Prisms are used to extract one value out of a sum type.
 
-There also exists subtyping between optics, for example a lens is also a getter, and a traversal is also a fold. You can find a full subtyping chart [here](https://i.imgur.com/ALlbPRa.png). The most important optics for our use case are traversals and lenses. If you have a good intuition with `Traversable` then traversals should seem familiar, as they are just a generalized version of `Traversable`.  
+There also exists subtyping between optics, for example a lens is also a getter, and a traversal is also a fold. You can find a full subtyping chart [here](https://i.imgur.com/ALlbPRa.png). The most important optics for our use case are traversals and lenses. If you have a good intuition with `Traversable` then traversals should seem familiar, as they are just a generalized version of `Traversable`.
 
 ## ECS Implementation
 
-Now that we have a basic understanding of ECS and lenses, let's implement our own ECS in Haskell. We will start by defining the basic types and functions that we will need. 
+Now that we have a basic understanding of ECS and lenses, let's implement our own ECS in Haskell. We will start by defining the basic types and functions that we will need.
 
 ```haskell
 type System m = StateT ECSState m
@@ -118,13 +118,13 @@ instance Num Entity where
     abs (ID x) = ID $ abs x
     signum (ID x) = ID $ signum x
     fromInteger x = ID $ fromInteger x
-    
+
 instance Default Entity where
     def = ID 0
 ```
 
 The `System` type is a monad transformer that will be used to implement our systems. It is a state monad that will store the current entity ID and a map of components. The `Entity` type is just a wrapper around an integer, and it is used to identify entities. `ECSState` is the type of our state inside the `System` monad. The `componentsList` map is a map from entity IDs to a list of components. The `Default` instances are used to initialize the state with default values, for better ergonomics. Now lets define our components:
-    
+
 ```haskell
 data Components = Components {
     _position :: Maybe Position,
@@ -177,12 +177,12 @@ removeEntity entity = componentsList %= delete entity
 
 Usually in imperative implementations, deleting entities is not a trivial task. You have to make sure that you don't leave any dangling references in each component array. With our implementation, we don't have to worry about any of that, since our state is immutable.
 
-That's all for our helper functions. With these functions and lenses we can write our systems. 
+That's all for our helper functions. With these functions and lenses we can write our systems.
 
 ## Bouncing Balls
 
 Let's write a simple physics simulation of bouncing balls. We will have a movement system that will update the position of each entity based on its velocity, and a collision system to detect collisions against the walls. We will also have a rendering system that will print the position of each entity. Let's start by implementing our movement system:
-    
+
 ```haskell
 movementSystem :: System IO ()
 movementSystem = do
@@ -252,7 +252,7 @@ repeatingSystems = do
     movementSystem
     collisionSystem
     renderSystem
-    
+
     liftIO $ threadDelay 100000
     repeatingSystems
 
@@ -262,11 +262,11 @@ main = void $ runStateT mainSystem def
 
 The `mainSystem` function spawns a bunch of entities, and then it calls `repeatingSystems`. The `repeatingSystems` function calls the three systems, and then it sleeps, and then it calls itself again. The `main` function runs the `mainSystem` function with the default state. This is what you should see when you run it:
 
-![](/images/bouncingballs.gif)
+![](/images/ecs-lens.gif)
 
-## Conclusion   
+## Conclusion
 
-In this post I showed how to implement an ECS in Haskell, while using lenses to make the code very concise and easy to use. I also showed how to use the ECS to implement a simple physics simulator. 
+In this post I showed how to implement an ECS in Haskell, while using lenses to make the code very concise and easy to use. I also showed how to use the ECS to implement a simple physics simulator.
 
 Now let's consider the pros and cons of lenses. The main advantage of lenses is that they make the code very concise and easy to use, the `lens` library is ridiculously huge, and almost all Haskell code you write can be rewritten using lens, but with this massive library of combinators comes complexity. There are several types of complexity that lens bring to your project. First, is the complexity of learning the library and how to properly use different categories of optics, there is `Getter`, `Setter`, `Traversal`, `Fold`, `Lens`, `Iso`, `Prism` and probably more that I don't know about, and each of these categories has its massive library of combinators. Second, is the complexity of understanding the code, while lenses can provide very concise programs, any user that tries to read code using lens without any previous experience will find themselves very lost. The generality of lenses results in difficult to understand type signatures, often defined by other categories within lenses. Third, is the complexity of debugging the code, like I stated previously the function signatures of `lens` combinators can be very overwhelming especially to new users, and this can make debugging very difficult, and many concepts of lenses are based on category theory, which most programmers don't know. One particularly funny example is `confusing` which uses Kan extensions and the Yoneda lemma to fuse a `Traversal`, try explaining that to a new user. Lastly, is the extra dependencies that lenses bring to your project, the `lens` library is massive, and it has many dependencies, and no one wants to wait 10 minutes for their project to compile.
 
