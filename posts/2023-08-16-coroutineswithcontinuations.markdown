@@ -4,7 +4,7 @@ title: Coroutines with the Continuation and State Monad
 
 Coroutines are a powerful feature that can help you create responsive games. Coroutines are functions that can pause and resume their execution at any point, without blocking the main thread of the game. This allows you to perform tasks that require waiting, delays, or multiple steps, without affecting the responsiveness of your game. They are a perfect abstraction for modelling events over time, such as animations, physics, and AI.
 
-For example, imagine you want to create a simple animation where a character moves from one point to another while changing its colour and size. You could write a coroutine that updates the character’s position, color, and size every frame and pauses until the next frame using the yield statement, without worrying about an explicit time parameter. 
+For example, imagine you want to create a simple animation where a character moves from one point to another while changing its colour and size. You could write a coroutine that updates the character’s position, color, and size every frame and pauses until the next frame using the yield statement, without worrying about an explicit time parameter.
 
 Coroutines are a common feature in many programming languages, such as Lua, Python, and C#. However, they are not a native feature of Haskell. In this article, we will explore how to implement coroutines in Haskell using continuations and monads. We will also see how to use coroutines to create a simple game.
 
@@ -12,7 +12,7 @@ Coroutines are a common feature in many programming languages, such as Lua, Pyth
 
 A continuation is a way of representing the state of a computation at any point in time. Like a snapshot of what the program is doing and what it needs to do next. A continuation can be used to resume the computation from where it left off or to transfer the control to a different part of the program. A continuation can also be passed as an argument to another function, which can then decide how to continue the computation. This is called continuation-passing style, and it is a common technique in functional programming languages.
 
-One way to understand continuations is to imagine that every function has an extra parameter that represents what the function should do after it finishes its work. This parameter is called the continuation, and it is usually a function that takes the result of the original function as its input. For example, suppose we have a function 
+One way to understand continuations is to imagine that every function has an extra parameter that represents what the function should do after it finishes its work. This parameter is called the continuation, and it is usually a function that takes the result of the original function as its input. For example, suppose we have a function
 ```haskell
 id :: a -> a
 id x = x
@@ -43,7 +43,7 @@ which we can use as
 
 Continuations are a powerful abstraction, but they are not very convenient to use. Continuations are functions that take a single argument, and return a value. This means that if we want to use continuations to implement a coroutine, we would have to explicitly pass the continuation to each function.
 
-Instead, we can use the monad abstraction to simplify this process. 
+Instead, we can use the monad abstraction to simplify this process.
 
 ## What is Monad?
 
@@ -161,9 +161,9 @@ instance Monad Identity where
 type State s a = StateT s Identity a
 ```
 
-By the way, all of these monad transformers are implemented in the [mtl package](https://hackage.haskell.org/package/mtl), so you don’t have to implement them yourself. We are just implementing them here to explain the process from scratch and to understand how they work. For the rest of this post, I'll be using the `mtl` package for the monad transformers, since it comes with some useful typeclasses that reduce boilerplate. 
+By the way, all of these monad transformers are implemented in the [mtl package](https://hackage.haskell.org/package/mtl), so you don’t have to implement them yourself. We are just implementing them here to explain the process from scratch and to understand how they work. For the rest of this post, I'll be using the `mtl` package for the monad transformers, since it comes with some useful typeclasses that reduce boilerplate.
 
-We can do the same for the `Cont` monad, but I'll leave that as an exercise for the reader. 
+We can do the same for the `Cont` monad, but I'll leave that as an exercise for the reader.
 
 ## Coroutine Monad
 
@@ -267,7 +267,7 @@ schedule = do
     ready <- getContinuations
     case ready of
         []     -> return ()
-        (p:ps) -> do 
+        (p:ps) -> do
             putContinuations ps
             p
 ```
@@ -275,7 +275,7 @@ schedule = do
 The `queue` function takes a coroutine and adds it to the end of the queue. The `schedule` function takes the first coroutine from the queue and runs it. If the queue is empty, then it returns. Now we can implement the control primitives `fork` and `yield`:
 ```haskell
 yield :: Monad m => Coroutine r m ()
-yield = callCC $ \k -> do 
+yield = callCC $ \k -> do
     queue (k ())
     schedule
 
@@ -332,7 +332,7 @@ render name = do
     liftIO $ threadDelay 50000
     Main.yield
 ```
-`threadDelay` is there to limit the frame rate of the animation; otherwise, it'll be too fast. For a real game, you would definitely use a more sophisticated method of synchronization. The `putStr "\ESC[2J"` is there to clear the screen before rendering the worm. The `liftIO` function is from the `mtl` package, and it is a convenience function that lifts an `IO` action into the monad. 
+`threadDelay` is there to limit the frame rate of the animation; otherwise, it'll be too fast. For a real game, you would definitely use a more sophisticated method of synchronization. The `putStr "\ESC[2J"` is there to clear the screen before rendering the worm. The `liftIO` function is from the `mtl` package, and it is a convenience function that lifts an `IO` action into the monad.
 
 Now we can combine these two coroutines together to create a simple game loop:
 ```haskell
@@ -346,7 +346,7 @@ main = execStateT (runCoroutine gameCoroutine) Data.Map.Strict.empty
 ```
 Here's a gif of the animation in action:
 
-![](/images/coroutine-worm.gif)
+![](/images/coroutine-with-continuations.gif)
 
 ## Conclusion
 
@@ -354,7 +354,6 @@ In this article, we explored how to implement coroutines in Haskell using contin
 
 However, continuations aren't the only method of implementing coroutines. This [implementation](https://hackage.haskell.org/package/monad-coroutine-0.9.2/docs/Control-Monad-Coroutine.html) uses trampolining to implement coroutines and also warps values in a `Functor`. Their method allows for coroutines to take parameters upon resumption and yield values directly, which our coroutine implementation is unable to do. However, we can use `State` monads to overcome this issue, but our design is definitely less ergonomic. Additionally, the use of continuations and `callCC` in Haskell is somewhat controversial since laziness allows for techniques that otherwise require continuations in other languages. Continuations can also severely reduce code readability, and can be difficult to debug.
 
-Overall, when considering powerful abstractions like continuations, the most important question to ask is do we actually need all that power? 
+Overall, when considering powerful abstractions like continuations, the most important question to ask is do we actually need all that power?
 
 I hope you enjoyed reading and learned something new from this article. The full source code can be found [here](https://github.com/timeolord/coroutines-with-continuations) at my Github.
-
