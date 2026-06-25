@@ -346,7 +346,7 @@ main = execStateT (runCoroutine gameCoroutine) Data.Map.Strict.empty
 ```
 Here's a gif of the animation in action:
 
-![](/images/coroutine-with-continuations.gif)
+![](/images/coroutines-with-continuations.gif)
 
 ## Conclusion
 
